@@ -1,0 +1,40 @@
+from fastapi import APIRouter, Depends, Request
+from sqlalchemy.orm import Session
+from src.api.dependencias.banco import obter_db
+from src.api.dependencias.autenticacao import obter_usuario_atual
+from src.api.schemas.schema_autenticacao import (
+    RequisicaoLogin, RequisicaoRegistro, RespostaLogin, RespostaUsuarioPublico
+)
+from src.aplicacao.casos_uso.autenticacao.autenticar_usuario import autenticar_usuario
+from src.aplicacao.casos_uso.autenticacao.registrar_usuario import registrar_usuario
+from src.infraestrutura.auditoria.servico_auditoria import registrar_acao
+from src.infraestrutura.banco.modelos import ModeloUsuario
+
+roteador = APIRouter(prefix="/auth", tags=["Autenticação"])
+
+@roteador.post("/login", response_model=RespostaLogin, summary="Autenticar usuário")
+def login(requisicao: RequisicaoLogin, request: Request, sessao: Session = Depends(obter_db)):
+    resultado = autenticar_usuario(sessao, requisicao.email, requisicao.senha)
+    usuario: ModeloUsuario = resultado["usuario"]
+    registrar_acao(
+        sessao, "LOGIN_USUARIO", "usuarios", str(usuario.id),
+        usuario_id=usuario.id, ip_origem=request.client.host if request.client else None
+    )
+    sessao.commit()
+    return resultado
+
+@roteador.post("/registrar", response_model=RespostaUsuarioPublico, status_code=201, summary="Registrar novo usuário")
+def registrar(requisicao: RequisicaoRegistro, sessao: Session = Depends(obter_db)):
+    usuario = registrar_usuario(
+        sessao,
+        nome=requisicao.nome,
+        email=requisicao.email,
+        senha=requisicao.senha,
+        perfil=requisicao.perfil,
+        consentimento_lgpd=requisicao.consentimento_lgpd,
+    )
+    return usuario
+
+@roteador.get("/me", response_model=RespostaUsuarioPublico, summary="Dados do usuário autenticado")
+def perfil_atual(usuario: ModeloUsuario = Depends(obter_usuario_atual)):
+    return usuario
