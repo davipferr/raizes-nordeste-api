@@ -29,7 +29,7 @@ def obter_usuario_atual(
 
     usuario = sessao.query(ModeloUsuario).filter(
         ModeloUsuario.id == int(usuario_id),
-        ModeloUsuario.ativo == True,
+        ModeloUsuario.ativo.is_(True),
     ).first()
     if not usuario:
         raise _erro_nao_autenticado

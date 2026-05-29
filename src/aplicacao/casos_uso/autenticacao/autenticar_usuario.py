@@ -8,7 +8,7 @@ from src.dominio.excecoes import CredenciaisInvalidas
 def autenticar_usuario(sessao: Session, email: str, senha: str) -> dict:
     usuario = sessao.query(ModeloUsuario).filter(
         ModeloUsuario.email == email.lower().strip(),
-        ModeloUsuario.ativo == True,
+        ModeloUsuario.ativo.is_(True),
     ).first()
 
     if not usuario or not verificar_senha(senha, usuario.senha_hash):
