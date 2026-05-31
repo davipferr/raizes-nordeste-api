@@ -3,7 +3,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from src.api.configuracao import criar_app
 from src.api.tratadores_erro.tratadores import registrar_handlers
 from src.api.middleware.log_requisicoes import middleware_log
-from src.api.routers import autenticacao, usuarios, unidades, produtos, cardapio, estoque, pedidos
+from src.api.routers import (
+    autenticacao, usuarios, unidades, produtos,
+    cardapio, estoque, pedidos, pagamentos, fidelidade
+)
 
 app: FastAPI = criar_app()
 
@@ -17,6 +20,8 @@ app.include_router(produtos.roteador)
 app.include_router(cardapio.roteador)
 app.include_router(estoque.roteador)
 app.include_router(pedidos.roteador)
+app.include_router(pagamentos.roteador)
+app.include_router(fidelidade.roteador)
 
 @app.get("/", tags=["Saúde"])
 def verificar_saude():
