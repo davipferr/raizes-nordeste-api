@@ -15,7 +15,8 @@ async def middleware_log(request: Request, call_next):
     rota_base = "/" + request.url.path.lstrip("/").split("/")[0]
     if any(request.url.path.startswith(r) for r in _ROTAS_SENSIVEIS):
         logger.info(
-            "%s %s | status=%s | %sms | ip=%s",
+            "[%s] %s %s | status=%s | %sms | ip=%s",
+            rota_base,  # Agrupa por rota base
             request.method,
             request.url.path,
             resposta.status_code,
