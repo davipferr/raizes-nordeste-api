@@ -1,0 +1,228 @@
+{
+  "info": {
+    "name": "Raízes do Nordeste API - Plano de Testes",
+    "description": "Coleção completa com os 14 cenários de teste (T01-T14) para a API da rede Raízes do Nordeste. Execute na ordem: Auth → Produtos → Pedidos → Pagamentos → Fidelidade.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000" },
+    { "key": "token_admin", "value": "" },
+    { "key": "token_cliente", "value": "" },
+    { "key": "pedido_id", "value": "" },
+    { "key": "pedido_id_recusa", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "T01 - Login válido (Admin)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Tem accessToken', () => { var j = pm.response.json(); pm.expect(j.access_token).to.be.a('string'); pm.collectionVariables.set('token_admin', j.access_token); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@raizesnordeste.com.br\",\n  \"senha\": \"Admin@123\"\n}" }
+          }
+        },
+        {
+          "name": "T01b - Login válido (Cliente com LGPD)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "var j = pm.response.json(); pm.collectionVariables.set('token_cliente', j.access_token);"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"cliente@raizesnordeste.com.br\",\n  \"senha\": \"Cliente@123\"\n}" }
+          }
+        },
+        {
+          "name": "T02 - Cadastro de novo usuário",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "pm.test('Sem senha_hash na resposta', () => { var body = pm.response.text(); pm.expect(body).to.not.include('senha_hash'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/registrar",
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Teste Postman\",\n  \"email\": \"postman_teste_unico@raizesnordeste.com.br\",\n  \"senha\": \"Teste@123\",\n  \"perfil\": \"CLIENTE\",\n  \"consentimento_lgpd\": true\n}" }
+          }
+        },
+        {
+          "name": "T07 - Acesso sem token (401)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 401', () => pm.response.to.have.status(401));", "pm.test('Erro padronizado', () => { var j = pm.response.json(); pm.expect(j).to.have.property('erro'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/pedidos"
+          }
+        },
+        {
+          "name": "T08 - Perfil sem permissão (403)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 403', () => pm.response.to.have.status(403));", "pm.test('Erro PERMISSAO_NEGADA', () => { pm.expect(pm.response.json().erro).to.eql('PERMISSAO_NEGADA'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/estoque/entrada",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"produto_id\": 1,\n  \"quantidade\": 10\n}" }
+          }
+        },
+        {
+          "name": "T11 - Login com senha errada (401)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 401', () => pm.response.to.have.status(401));", "pm.test('Erro CREDENCIAIS_INVALIDAS', () => { pm.expect(pm.response.json().erro).to.eql('CREDENCIAIS_INVALIDAS'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@raizesnordeste.com.br\",\n  \"senha\": \"SenhaErrada999\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cardápio e Produtos",
+      "item": [
+        {
+          "name": "T03 - Listar cardápio da unidade 1 (200)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Lista de produtos', () => { pm.expect(pm.response.json()).to.be.an('array'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/cardapio/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pedidos",
+      "item": [
+        {
+          "name": "T04 - Criar pedido válido via APP (201)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "pm.test('Status AGUARDANDO_PAGAMENTO e canal APP', () => { var j = pm.response.json(); pm.expect(j.status).to.eql('AGUARDANDO_PAGAMENTO'); pm.expect(j.canal_pedido).to.eql('APP'); pm.collectionVariables.set('pedido_id', j.id); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pedidos",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"canal_pedido\": \"APP\",\n  \"itens\": [\n    { \"produto_id\": 1, \"quantidade\": 1 }\n  ],\n  \"forma_pagamento\": \"MOCK\"\n}" }
+          }
+        },
+        {
+          "name": "T04b - Criar pedido TOTEM (para T06)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('pedido_id_recusa', pm.response.json().id);"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pedidos",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"canal_pedido\": \"TOTEM\",\n  \"itens\": [\n    { \"produto_id\": 3, \"quantidade\": 1 }\n  ],\n  \"forma_pagamento\": \"PIX\"\n}" }
+          }
+        },
+        {
+          "name": "T06 - Filtrar pedidos por canalPedido=APP (200)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Apenas pedidos APP', () => { var j = pm.response.json(); j.itens.forEach(p => pm.expect(p.canal_pedido).to.eql('APP')); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{base_url}}/pedidos?canalPedido=APP", "host": ["{{base_url}}"], "path": ["pedidos"], "query": [{ "key": "canalPedido", "value": "APP" }] }
+          }
+        },
+        {
+          "name": "T09 - Estoque insuficiente (409)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 409', () => pm.response.to.have.status(409));", "pm.test('Erro ESTOQUE_INSUFICIENTE', () => { pm.expect(pm.response.json().erro).to.eql('ESTOQUE_INSUFICIENTE'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pedidos",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"canal_pedido\": \"WEB\",\n  \"itens\": [\n    { \"produto_id\": 5, \"quantidade\": 50 }\n  ],\n  \"forma_pagamento\": \"MOCK\"\n}" }
+          }
+        },
+        {
+          "name": "T10 - Pedido sem canalPedido (422)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 422', () => pm.response.to.have.status(422));", "pm.test('Erro de validação', () => { pm.expect(pm.response.json().erro).to.eql('VALIDACAO_INVALIDA'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pedidos",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"itens\": [{ \"produto_id\": 1, \"quantidade\": 1 }],\n  \"forma_pagamento\": \"MOCK\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pagamentos",
+      "item": [
+        {
+          "name": "T05 - Pagamento mock APROVADO (200)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Aprovado e status APROVADO', () => { var j = pm.response.json(); pm.expect(j.aprovado).to.be.true; pm.expect(j.status).to.eql('APROVADO'); pm.expect(j.payload_gateway.codigo_resposta).to.eql('00'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pagamentos/processar/{{pedido_id}}",
+            "body": { "mode": "raw", "raw": "{\n  \"forcar_recusa\": false\n}" }
+          }
+        },
+        {
+          "name": "T05b - Verificar pedido aprovado → PAGAMENTO_APROVADO",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status PAGAMENTO_APROVADO', () => { pm.expect(pm.response.json().status).to.eql('PAGAMENTO_APROVADO'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pedidos/{{pedido_id}}"
+          }
+        },
+        {
+          "name": "T12 - Pagamento mock RECUSADO → pedido CANCELADO",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Recusado e código 51', () => { var j = pm.response.json(); pm.expect(j.aprovado).to.be.false; pm.expect(j.status).to.eql('RECUSADO'); pm.expect(j.payload_gateway.codigo_resposta).to.eql('51'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pagamentos/processar/{{pedido_id_recusa}}",
+            "body": { "mode": "raw", "raw": "{\n  \"forcar_recusa\": true\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fidelidade",
+      "item": [
+        {
+          "name": "T13 - Consultar saldo de fidelidade (200)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Tem campo saldo', () => { pm.expect(pm.response.json()).to.have.property('saldo'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/fidelidade/saldo"
+          }
+        },
+        {
+          "name": "T14 - Sem consentimento LGPD → 403",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 403', () => pm.response.to.have.status(403));", "pm.test('Erro CONSENTIMENTO_LGPD_NECESSARIO', () => { pm.expect(pm.response.json().erro).to.eql('CONSENTIMENTO_LGPD_NECESSARIO'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_sem_lgpd}}" }],
+            "url": "{{base_url}}/fidelidade/saldo",
+            "description": "Usa o token de 'fernanda@email.com' que não tem consentimento LGPD. Execute T01 de login com esse usuário primeiro e coloque o token em {{token_sem_lgpd}}."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Estoque (referência)",
+      "item": [
+        {
+          "name": "Consultar estoque unidade 1",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/estoque/1"
+          }
+        },
+        {
+          "name": "Entrada de estoque",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/estoque/entrada",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"produto_id\": 1,\n  \"quantidade\": 100,\n  \"motivo\": \"Reposição semanal\"\n}" }
+          }
+        }
+      ]
+    }
+  ]
+}
