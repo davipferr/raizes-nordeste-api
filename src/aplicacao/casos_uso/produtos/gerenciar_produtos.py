@@ -58,8 +58,9 @@ def adicionar_produto_cardapio(sessao: Session, unidade_id: int, produto_id: int
     unidade = sessao.query(ModeloUnidade).filter(ModeloUnidade.id == unidade_id).first()
     if not unidade:
         raise UnidadeNaoEncontrada(unidade_id)
-    produto = obter_produto(sessao, produto_id)
-
+    
+    obter_produto(sessao, produto_id) # Verifica se o produto existe, caso não exista lança ProdutoNaoEncontrado
+    
     existente = sessao.query(ModeloCardapioUnidade).filter(
         ModeloCardapioUnidade.unidade_id == unidade_id,
         ModeloCardapioUnidade.produto_id == produto_id,

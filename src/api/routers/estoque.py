@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from src.api.dependencias.banco import obter_db
-from src.api.dependencias.autenticacao import obter_usuario_atual, requer_perfis
+from src.api.dependencias.autenticacao import requer_perfis
 from src.api.schemas.schema_estoque import RequisicaoMovimentacaoEstoque, RespostaEstoque
 from src.aplicacao.casos_uso.estoque.entrada_estoque import registrar_entrada
 from src.aplicacao.casos_uso.estoque.saida_estoque import registrar_saida, consultar_estoque_unidade
