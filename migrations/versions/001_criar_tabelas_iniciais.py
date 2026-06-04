@@ -13,12 +13,6 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
-    op.execute("CREATE TYPE perfil_usuario AS ENUM ('ADMIN', 'GERENTE', 'COZINHA', 'ATENDENTE', 'CLIENTE')")
-    op.execute("CREATE TYPE canal_pedido AS ENUM ('APP', 'TOTEM', 'BALCAO', 'PICKUP', 'WEB')")
-    op.execute("CREATE TYPE status_pedido AS ENUM ('AGUARDANDO_PAGAMENTO', 'PAGAMENTO_APROVADO', 'EM_PREPARO', 'PRONTO', 'ENTREGUE', 'CANCELADO')")
-    op.execute("CREATE TYPE status_pagamento AS ENUM ('PENDENTE', 'APROVADO', 'RECUSADO')")
-    op.execute("CREATE TYPE tipo_transacao_fidelidade AS ENUM ('GANHO', 'RESGATADO')")
-
     op.create_table(
         "usuarios",
         sa.Column("id", sa.Integer, primary_key=True, autoincrement=True),

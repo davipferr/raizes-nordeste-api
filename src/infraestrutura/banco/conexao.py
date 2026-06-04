@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Configuracoes(BaseSettings):
     database_url: str
+    database_test_url: str = ""
     chave_secreta_jwt: str
     algoritmo_jwt: str = "HS256"
     minutos_expiracao_token: int = 60
