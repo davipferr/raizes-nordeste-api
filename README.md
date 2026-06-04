@@ -301,6 +301,8 @@ Para confirmar que está rodando, acesse `http://localhost:8000/` e verifique:
 }
 ```
 
+Para encerrar a API, pressione `Ctrl + C` no terminal onde o uvicorn está rodando.
+
 ---
 
 ## Documentação da API (Swagger/OpenAPI)
