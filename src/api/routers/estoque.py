@@ -3,6 +3,10 @@ from sqlalchemy.orm import Session
 from src.api.dependencias.banco import obter_db
 from src.api.dependencias.autenticacao import requer_perfis
 from src.api.schemas.schema_estoque import RequisicaoMovimentacaoEstoque, RespostaEstoque
+from src.api.respostas_erro import (
+    NAO_AUTENTICADO, PERMISSAO_NEGADA, UNIDADE_OU_PRODUTO_NAO_ENCONTRADO,
+    ESTOQUE_INSUFICIENTE, VALIDACAO, ERRO_INTERNO
+)
 from src.aplicacao.casos_uso.estoque.entrada_estoque import registrar_entrada
 from src.aplicacao.casos_uso.estoque.saida_estoque import registrar_saida, consultar_estoque_unidade
 from src.dominio.enums import PerfilUsuario
@@ -10,7 +14,8 @@ from src.infraestrutura.banco.modelos import ModeloUsuario
 
 roteador = APIRouter(prefix="/estoque", tags=["Estoque"])
 
-@roteador.get("/{unidade_id}", response_model=list[RespostaEstoque], summary="Consultar estoque por unidade")
+@roteador.get("/{unidade_id}", response_model=list[RespostaEstoque], summary="Consultar estoque por unidade",
+              responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **ERRO_INTERNO})
 def consultar(
     unidade_id: int,
     sessao: Session = Depends(obter_db),
@@ -20,7 +25,9 @@ def consultar(
 ):
     return consultar_estoque_unidade(sessao, unidade_id)
 
-@roteador.post("/entrada", response_model=RespostaEstoque, status_code=201, summary="Registrar entrada de estoque")
+@roteador.post("/entrada", response_model=RespostaEstoque, status_code=201,
+               summary="Registrar entrada de estoque",
+               responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **UNIDADE_OU_PRODUTO_NAO_ENCONTRADO, **VALIDACAO, **ERRO_INTERNO})
 def entrada(
     dados: RequisicaoMovimentacaoEstoque,
     sessao: Session = Depends(obter_db),
@@ -39,7 +46,9 @@ def entrada(
         atualizado_em=estoque.atualizado_em,
     )
 
-@roteador.post("/saida", response_model=RespostaEstoque, status_code=201, summary="Registrar saída manual de estoque")
+@roteador.post("/saida", response_model=RespostaEstoque, status_code=201,
+               summary="Registrar saída manual de estoque",
+               responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **ESTOQUE_INSUFICIENTE, **VALIDACAO, **ERRO_INTERNO})
 def saida(
     dados: RequisicaoMovimentacaoEstoque,
     sessao: Session = Depends(obter_db),

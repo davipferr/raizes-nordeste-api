@@ -8,13 +8,17 @@ from src.api.schemas.schema_fidelidade import (
     RespostaResgate, RespostaTransacaoFidelidade
 )
 from src.api.schemas.schema_paginacao import RespostaPaginada
+from src.api.respostas_erro import (
+    NAO_AUTENTICADO, CONSENTIMENTO_LGPD, SALDO_INSUFICIENTE, VALIDACAO, ERRO_INTERNO
+)
 from src.aplicacao.casos_uso.fidelidade.consultar_saldo import consultar_saldo, consultar_historico
 from src.aplicacao.casos_uso.fidelidade.resgatar_pontos import resgatar_pontos
 from src.infraestrutura.banco.modelos import ModeloUsuario
 
 roteador = APIRouter(prefix="/fidelidade", tags=["Fidelidade"])
 
-@roteador.get("/saldo", response_model=RespostaSaldoFidelidade, summary="Consultar saldo de pontos")
+@roteador.get("/saldo", response_model=RespostaSaldoFidelidade, summary="Consultar saldo de pontos",
+              responses={**NAO_AUTENTICADO, **CONSENTIMENTO_LGPD, **ERRO_INTERNO})
 def saldo(
     sessao: Session = Depends(obter_db),
     usuario: ModeloUsuario = Depends(obter_usuario_atual),
@@ -25,6 +29,7 @@ def saldo(
     "/historico",
     response_model=RespostaPaginada[RespostaTransacaoFidelidade],
     summary="Histórico de transações de fidelidade",
+    responses={**NAO_AUTENTICADO, **CONSENTIMENTO_LGPD, **ERRO_INTERNO},
 )
 def historico(
     pagina: int = Query(1, ge=1),
@@ -38,7 +43,8 @@ def historico(
         limite=limite, paginas=math.ceil(total / limite) or 1
     )
 
-@roteador.post("/resgatar", response_model=RespostaResgate, summary="Resgatar pontos de fidelidade")
+@roteador.post("/resgatar", response_model=RespostaResgate, summary="Resgatar pontos de fidelidade",
+               responses={**NAO_AUTENTICADO, **CONSENTIMENTO_LGPD, **SALDO_INSUFICIENTE, **VALIDACAO, **ERRO_INTERNO})
 def resgatar(
     dados: RequisicaoResgatarPontos,
     request: Request,

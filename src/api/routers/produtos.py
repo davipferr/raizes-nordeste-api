@@ -5,6 +5,9 @@ from src.api.dependencias.banco import obter_db
 from src.api.dependencias.autenticacao import obter_usuario_atual, requer_perfis
 from src.api.schemas.schema_produto import RequisicaoCriarProduto, RequisicaoAtualizarProduto, RespostaProduto
 from src.api.schemas.schema_paginacao import RespostaPaginada
+from src.api.respostas_erro import (
+    NAO_AUTENTICADO, PERMISSAO_NEGADA, PRODUTO_NAO_ENCONTRADO, VALIDACAO, ERRO_INTERNO
+)
 from src.aplicacao.casos_uso.produtos.gerenciar_produtos import (
     listar_produtos, obter_produto, criar_produto, atualizar_produto
 )
@@ -13,7 +16,8 @@ from src.infraestrutura.banco.modelos import ModeloUsuario
 
 roteador = APIRouter(prefix="/produtos", tags=["Produtos"])
 
-@roteador.get("", response_model=RespostaPaginada[RespostaProduto], summary="Listar produtos")
+@roteador.get("", response_model=RespostaPaginada[RespostaProduto], summary="Listar produtos",
+              responses={**NAO_AUTENTICADO, **ERRO_INTERNO})
 def listar(
     pagina: int = Query(1, ge=1),
     limite: int = Query(10, ge=1, le=100),
@@ -24,7 +28,8 @@ def listar(
     itens, total = listar_produtos(sessao, pagina, limite, categoria)
     return RespostaPaginada(itens=itens, total=total, pagina=pagina, limite=limite, paginas=math.ceil(total / limite) or 1)
 
-@roteador.get("/{produto_id}", response_model=RespostaProduto, summary="Obter produto por ID")
+@roteador.get("/{produto_id}", response_model=RespostaProduto, summary="Obter produto por ID",
+              responses={**NAO_AUTENTICADO, **PRODUTO_NAO_ENCONTRADO, **ERRO_INTERNO})
 def obter(
     produto_id: int,
     sessao: Session = Depends(obter_db),
@@ -32,7 +37,8 @@ def obter(
 ):
     return obter_produto(sessao, produto_id)
 
-@roteador.post("", response_model=RespostaProduto, status_code=201, summary="Criar produto")
+@roteador.post("", response_model=RespostaProduto, status_code=201, summary="Criar produto",
+               responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **VALIDACAO, **ERRO_INTERNO})
 def criar(
     dados: RequisicaoCriarProduto,
     sessao: Session = Depends(obter_db),
@@ -40,7 +46,8 @@ def criar(
 ):
     return criar_produto(sessao, dados.nome, dados.descricao, dados.preco, dados.categoria)
 
-@roteador.put("/{produto_id}", response_model=RespostaProduto, summary="Atualizar produto")
+@roteador.put("/{produto_id}", response_model=RespostaProduto, summary="Atualizar produto",
+              responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **PRODUTO_NAO_ENCONTRADO, **VALIDACAO, **ERRO_INTERNO})
 def atualizar(
     produto_id: int,
     dados: RequisicaoAtualizarProduto,
@@ -49,7 +56,8 @@ def atualizar(
 ):
     return atualizar_produto(sessao, produto_id, dados.model_dump(exclude_none=True))
 
-@roteador.delete("/{produto_id}", status_code=204, summary="Desativar produto")
+@roteador.delete("/{produto_id}", status_code=204, summary="Desativar produto",
+                 responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **PRODUTO_NAO_ENCONTRADO, **ERRO_INTERNO})
 def desativar(
     produto_id: int,
     sessao: Session = Depends(obter_db),

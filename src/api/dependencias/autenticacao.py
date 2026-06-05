@@ -6,7 +6,7 @@ from src.infraestrutura.seguranca.servico_token import decodificar_token
 from src.infraestrutura.banco.modelos import ModeloUsuario
 from src.dominio.enums import PerfilUsuario
 
-esquema_bearer = HTTPBearer()
+esquema_bearer = HTTPBearer(auto_error=False)
 
 _erro_nao_autenticado = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -19,9 +19,11 @@ _erro_nao_autenticado = HTTPException(
 )
 
 def obter_usuario_atual(
-    credenciais: HTTPAuthorizationCredentials = Depends(esquema_bearer),
+    credenciais: HTTPAuthorizationCredentials | None = Depends(esquema_bearer),
     sessao: Session = Depends(obter_db),
 ) -> ModeloUsuario:
+    if credenciais is None:
+        raise _erro_nao_autenticado
     payload = decodificar_token(credenciais.credentials)
     usuario_id = payload.get("sub")
     if not usuario_id:

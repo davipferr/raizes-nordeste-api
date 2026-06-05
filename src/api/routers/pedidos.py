@@ -8,6 +8,11 @@ from src.api.schemas.schema_pedido import (
     RespostaPedido, RespostaPedidoResumo
 )
 from src.api.schemas.schema_paginacao import RespostaPaginada
+from src.api.respostas_erro import (
+    NAO_AUTENTICADO, PERMISSAO_NEGADA, PEDIDO_NAO_ENCONTRADO,
+    RECURSOS_PEDIDO_NAO_ENCONTRADO, ESTOQUE_INSUFICIENTE,
+    TRANSICAO_STATUS_INVALIDA, VALIDACAO, ERRO_INTERNO
+)
 from src.aplicacao.casos_uso.pedidos.criar_pedido import criar_pedido
 from src.aplicacao.casos_uso.pedidos.listar_pedidos import listar_pedidos, obter_pedido_com_itens
 from src.aplicacao.casos_uso.pedidos.atualizar_status import atualizar_status_pedido
@@ -25,7 +30,8 @@ _PERFIS_STATUS = (
     PerfilUsuario.COZINHA, PerfilUsuario.ATENDENTE
 )
 
-@roteador.post("", response_model=RespostaPedido, status_code=201, summary="Criar pedido")
+@roteador.post("", response_model=RespostaPedido, status_code=201, summary="Criar pedido",
+               responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **RECURSOS_PEDIDO_NAO_ENCONTRADO, **ESTOQUE_INSUFICIENTE, **VALIDACAO, **ERRO_INTERNO})
 def criar(
     dados: RequisicaoCriarPedido,
     request: Request,
@@ -44,11 +50,12 @@ def criar(
     )
     return obter_pedido_com_itens(sessao, pedido.id)
 
-@roteador.get("", response_model=RespostaPaginada[RespostaPedidoResumo], summary="Listar pedidos")
+@roteador.get("", response_model=RespostaPaginada[RespostaPedidoResumo], summary="Listar pedidos",
+              responses={**NAO_AUTENTICADO, **ERRO_INTERNO})
 def listar(
     pagina: int = Query(1, ge=1),
     limite: int = Query(10, ge=1, le=100),
-    canal_pedido: CanalPedido | None = Query(None),
+    canal_pedido: CanalPedido | None = Query(None, alias="canalPedido"),
     status: StatusPedido | None = Query(None),
     unidade_id: int | None = Query(None),
     sessao: Session = Depends(obter_db),
@@ -66,7 +73,8 @@ def listar(
         limite=limite, paginas=math.ceil(total / limite) or 1
     )
 
-@roteador.get("/{pedido_id}", response_model=RespostaPedido, summary="Obter pedido com itens")
+@roteador.get("/{pedido_id}", response_model=RespostaPedido, summary="Obter pedido com itens",
+              responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **PEDIDO_NAO_ENCONTRADO, **ERRO_INTERNO})
 def obter(
     pedido_id: int,
     sessao: Session = Depends(obter_db),
@@ -82,7 +90,8 @@ def obter(
         })
     return dados
 
-@roteador.patch("/{pedido_id}/status", response_model=RespostaPedido, summary="Atualizar status do pedido")
+@roteador.patch("/{pedido_id}/status", response_model=RespostaPedido, summary="Atualizar status do pedido",
+                responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **PEDIDO_NAO_ENCONTRADO, **TRANSICAO_STATUS_INVALIDA, **VALIDACAO, **ERRO_INTERNO})
 def atualizar_status(
     pedido_id: int,
     dados: RequisicaoAtualizarStatus,

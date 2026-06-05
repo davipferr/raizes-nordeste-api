@@ -5,6 +5,9 @@ from src.api.dependencias.autenticacao import obter_usuario_atual
 from src.api.schemas.schema_autenticacao import (
     RequisicaoLogin, RequisicaoRegistro, RespostaLogin, RespostaUsuarioPublico
 )
+from src.api.respostas_erro import (
+    CREDENCIAIS_INVALIDAS, EMAIL_JA_CADASTRADO, NAO_AUTENTICADO, VALIDACAO, ERRO_INTERNO
+)
 from src.aplicacao.casos_uso.autenticacao.autenticar_usuario import autenticar_usuario
 from src.aplicacao.casos_uso.autenticacao.registrar_usuario import registrar_usuario
 from src.infraestrutura.auditoria.servico_auditoria import registrar_acao
@@ -12,7 +15,8 @@ from src.infraestrutura.banco.modelos import ModeloUsuario
 
 roteador = APIRouter(prefix="/auth", tags=["Autenticação"])
 
-@roteador.post("/login", response_model=RespostaLogin, summary="Autenticar usuário")
+@roteador.post("/login", response_model=RespostaLogin, summary="Autenticar usuário",
+               responses={**CREDENCIAIS_INVALIDAS, **VALIDACAO, **ERRO_INTERNO})
 def login(requisicao: RequisicaoLogin, request: Request, sessao: Session = Depends(obter_db)):
     resultado = autenticar_usuario(sessao, requisicao.email, requisicao.senha)
     usuario: ModeloUsuario = resultado["usuario"]
@@ -23,7 +27,9 @@ def login(requisicao: RequisicaoLogin, request: Request, sessao: Session = Depen
     sessao.commit()
     return resultado
 
-@roteador.post("/registrar", response_model=RespostaUsuarioPublico, status_code=201, summary="Registrar novo usuário")
+@roteador.post("/registrar", response_model=RespostaUsuarioPublico, status_code=201,
+               summary="Registrar novo usuário",
+               responses={**EMAIL_JA_CADASTRADO, **VALIDACAO, **ERRO_INTERNO})
 def registrar(requisicao: RequisicaoRegistro, sessao: Session = Depends(obter_db)):
     usuario = registrar_usuario(
         sessao,
@@ -35,6 +41,7 @@ def registrar(requisicao: RequisicaoRegistro, sessao: Session = Depends(obter_db
     )
     return usuario
 
-@roteador.get("/me", response_model=RespostaUsuarioPublico, summary="Dados do usuário autenticado")
+@roteador.get("/me", response_model=RespostaUsuarioPublico, summary="Dados do usuário autenticado",
+              responses={**NAO_AUTENTICADO, **ERRO_INTERNO})
 def perfil_atual(usuario: ModeloUsuario = Depends(obter_usuario_atual)):
     return usuario

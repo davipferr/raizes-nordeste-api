@@ -9,7 +9,9 @@
     { "key": "token_admin", "value": "" },
     { "key": "token_cliente", "value": "" },
     { "key": "pedido_id", "value": "" },
-    { "key": "pedido_id_recusa", "value": "" }
+    { "key": "pedido_id_recusa", "value": "" },
+    { "key": "token_sem_lgpd", "value": "" },
+    { "key": "email_sem_lgpd", "value": "" }
   ],
   "item": [
     {
@@ -42,7 +44,7 @@
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": "{{base_url}}/auth/registrar",
-            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Teste Postman\",\n  \"email\": \"postman_teste_unico@raizesnordeste.com.br\",\n  \"senha\": \"Teste@123\",\n  \"perfil\": \"CLIENTE\",\n  \"consentimento_lgpd\": true\n}" }
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Teste Postman\",\n  \"email\": \"postman_{{$timestamp}}@raizesnordeste.com.br\",\n  \"senha\": \"Teste@123\",\n  \"perfil\": \"CLIENTE\",\n  \"consentimento_lgpd\": true\n}" }
           }
         },
         {
@@ -90,12 +92,46 @@
         }
       ]
     },
+     {
+      "name": "Estoque",
+      "item": [
+        {
+          "name": "Consultar estoque unidade 1",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Retorna lista de estoque', () => { var j = pm.response.json(); pm.expect(j).to.be.an('array'); pm.expect(j[0]).to.have.property('produto_id'); pm.expect(j[0]).to.have.property('quantidade'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/estoque/1"
+          }
+        },
+        {
+          "name": "Entrada de estoque",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "pm.test('Estoque atualizado', () => { var j = pm.response.json(); pm.expect(j).to.have.property('produto_id'); pm.expect(j).to.have.property('quantidade'); pm.expect(j.quantidade).to.be.a('number'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/estoque/entrada",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"produto_id\": 1,\n  \"quantidade\": 100,\n  \"motivo\": \"Reposição semanal\"\n}" }
+          }
+        },
+        {
+          "name": "Entrada de estoque (produto 3)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "pm.test('Estoque atualizado', () => { var j = pm.response.json(); pm.expect(j).to.have.property('produto_id'); pm.expect(j).to.have.property('quantidade'); pm.expect(j.quantidade).to.be.a('number'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/estoque/entrada",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"produto_id\": 3,\n  \"quantidade\": 100,\n  \"motivo\": \"Reposição semanal\"\n}" }
+          }
+        }
+      ]
+    },
     {
       "name": "Pedidos",
       "item": [
         {
           "name": "T04 - Criar pedido válido via APP (201)",
-          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "pm.test('Status AGUARDANDO_PAGAMENTO e canal APP', () => { var j = pm.response.json(); pm.expect(j.status).to.eql('AGUARDANDO_PAGAMENTO'); pm.expect(j.canal_pedido).to.eql('APP'); pm.collectionVariables.set('pedido_id', j.id); });"], "type": "text/javascript" } }],
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "pm.test('Status AGUARDANDO_PAGAMENTO e canal APP', () => { var j = pm.response.json(); pm.collectionVariables.set('pedido_id', j.id); pm.expect(j.status).to.eql('AGUARDANDO_PAGAMENTO'); pm.expect(j.canal_pedido).to.eql('APP'); });"], "type": "text/javascript" } }],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
@@ -105,7 +141,7 @@
         },
         {
           "name": "T04b - Criar pedido TOTEM (para T06)",
-          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('pedido_id_recusa', pm.response.json().id);"], "type": "text/javascript" } }],
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "pm.test('Status AGUARDANDO_PAGAMENTO e canal TOTEM', () => { var j = pm.response.json(); pm.collectionVariables.set('pedido_id_recusa', j.id); pm.expect(j.status).to.eql('AGUARDANDO_PAGAMENTO'); pm.expect(j.canal_pedido).to.eql('TOTEM'); });"], "type": "text/javascript" } }],
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
@@ -191,35 +227,32 @@
           }
         },
         {
+          "name": "T13b - Registrar usuário sem consentimento LGPD",
+          "event": [{ "listen": "prerequest", "script": { "exec": ["pm.collectionVariables.set('email_sem_lgpd', 'sem_lgpd_' + Date.now() + '@teste.com');"], "type": "text/javascript" } }, { "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/registrar",
+            "body": { "mode": "raw", "raw": "{\n  \"nome\": \"Sem LGPD\",\n  \"email\": \"{{email_sem_lgpd}}\",\n  \"senha\": \"SemLgpd@123\",\n  \"perfil\": \"CLIENTE\",\n  \"consentimento_lgpd\": false\n}" }
+          }
+        },
+        {
+          "name": "T13c - Login usuário sem consentimento LGPD",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Salva token_sem_lgpd', () => { var j = pm.response.json(); pm.expect(j.access_token).to.be.a('string'); pm.collectionVariables.set('token_sem_lgpd', j.access_token); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email_sem_lgpd}}\",\n  \"senha\": \"SemLgpd@123\"\n}" }
+          }
+        },
+        {
           "name": "T14 - Sem consentimento LGPD → 403",
           "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 403', () => pm.response.to.have.status(403));", "pm.test('Erro CONSENTIMENTO_LGPD_NECESSARIO', () => { pm.expect(pm.response.json().erro).to.eql('CONSENTIMENTO_LGPD_NECESSARIO'); });"], "type": "text/javascript" } }],
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token_sem_lgpd}}" }],
-            "url": "{{base_url}}/fidelidade/saldo",
-            "description": "Usa o token de 'fernanda@email.com' que não tem consentimento LGPD. Execute T01 de login com esse usuário primeiro e coloque o token em {{token_sem_lgpd}}."
-          }
-        }
-      ]
-    },
-    {
-      "name": "Estoque (referência)",
-      "item": [
-        {
-          "name": "Consultar estoque unidade 1",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
-            "url": "{{base_url}}/estoque/1"
-          }
-        },
-        {
-          "name": "Entrada de estoque",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }],
-            "url": "{{base_url}}/estoque/entrada",
-            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"produto_id\": 1,\n  \"quantidade\": 100,\n  \"motivo\": \"Reposição semanal\"\n}" }
+            "url": "{{base_url}}/fidelidade/saldo"
           }
         }
       ]

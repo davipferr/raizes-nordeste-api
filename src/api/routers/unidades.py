@@ -5,6 +5,9 @@ from src.api.dependencias.banco import obter_db
 from src.api.dependencias.autenticacao import obter_usuario_atual, requer_perfis
 from src.api.schemas.schema_unidade import RequisicaoCriarUnidade, RequisicaoAtualizarUnidade, RespostaUnidade
 from src.api.schemas.schema_paginacao import RespostaPaginada
+from src.api.respostas_erro import (
+    NAO_AUTENTICADO, PERMISSAO_NEGADA, UNIDADE_NAO_ENCONTRADA, VALIDACAO, ERRO_INTERNO
+)
 from src.aplicacao.casos_uso.unidades.gerenciar_unidades import (
     listar_unidades, obter_unidade, criar_unidade, atualizar_unidade
 )
@@ -13,7 +16,8 @@ from src.infraestrutura.banco.modelos import ModeloUsuario
 
 roteador = APIRouter(prefix="/unidades", tags=["Unidades"])
 
-@roteador.get("", response_model=RespostaPaginada[RespostaUnidade], summary="Listar unidades da rede")
+@roteador.get("", response_model=RespostaPaginada[RespostaUnidade], summary="Listar unidades da rede",
+              responses={**NAO_AUTENTICADO, **ERRO_INTERNO})
 def listar(
     pagina: int = Query(1, ge=1),
     limite: int = Query(10, ge=1, le=100),
@@ -23,7 +27,8 @@ def listar(
     itens, total = listar_unidades(sessao, pagina, limite)
     return RespostaPaginada(itens=itens, total=total, pagina=pagina, limite=limite, paginas=math.ceil(total / limite) or 1)
 
-@roteador.get("/{unidade_id}", response_model=RespostaUnidade, summary="Obter unidade por ID")
+@roteador.get("/{unidade_id}", response_model=RespostaUnidade, summary="Obter unidade por ID",
+              responses={**NAO_AUTENTICADO, **UNIDADE_NAO_ENCONTRADA, **ERRO_INTERNO})
 def obter(
     unidade_id: int,
     sessao: Session = Depends(obter_db),
@@ -31,7 +36,8 @@ def obter(
 ):
     return obter_unidade(sessao, unidade_id)
 
-@roteador.post("", response_model=RespostaUnidade, status_code=201, summary="Criar nova unidade")
+@roteador.post("", response_model=RespostaUnidade, status_code=201, summary="Criar nova unidade",
+               responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **VALIDACAO, **ERRO_INTERNO})
 def criar(
     dados: RequisicaoCriarUnidade,
     sessao: Session = Depends(obter_db),
@@ -39,7 +45,8 @@ def criar(
 ):
     return criar_unidade(sessao, dados.nome, dados.endereco, dados.cidade, dados.estado)
 
-@roteador.put("/{unidade_id}", response_model=RespostaUnidade, summary="Atualizar unidade")
+@roteador.put("/{unidade_id}", response_model=RespostaUnidade, summary="Atualizar unidade",
+              responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **UNIDADE_NAO_ENCONTRADA, **VALIDACAO, **ERRO_INTERNO})
 def atualizar(
     unidade_id: int,
     dados: RequisicaoAtualizarUnidade,

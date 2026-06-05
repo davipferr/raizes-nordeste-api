@@ -339,7 +339,7 @@ O arquivo `colecao_postman/raizes_nordeste.json` contém os 14 cenários de test
 3. Selecione o arquivo `colecao_postman/raizes_nordeste.json` na pasta do projeto e confirme a importação (faça login se necessário).
 4. A coleção **"Raízes do Nordeste API - Plano de Testes"** aparecerá na barra lateral esquerda.
 5. Certifique-se de que a API está rodando antes de executar os testes (`uvicorn main:app --reload`).
-6. Execute as pastas **na ordem**: Auth → Cardápio e Produtos → Pedidos → Pagamentos → Fidelidade.
+6. Execute as pastas **na ordem**: Auth → Cardápio e Produtos → Estoque (referência) → Pedidos → Pagamentos → Fidelidade.
    - Para executar uma pasta: clique nos **três pontos (...)** ao lado do nome da pasta → **Run** → **Start run**.
 
 > **Importante:** Execute a pasta **Auth** primeiro (T01 e T01b) — ela preenche automaticamente os tokens de autenticação usados pelas demais requisições.
