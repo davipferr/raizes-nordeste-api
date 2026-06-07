@@ -1,5 +1,6 @@
 import os
 import pytest
+from dotenv import load_dotenv
 from datetime import datetime, timezone
 from decimal import Decimal
 from fastapi.testclient import TestClient
@@ -14,6 +15,8 @@ from src.infraestrutura.banco.modelos import (
 )
 from src.infraestrutura.seguranca.servico_senha import gerar_hash
 from src.dominio.enums import PerfilUsuario
+
+load_dotenv()
 
 _DATABASE_TEST_URL = os.environ.get(
     "DATABASE_TEST_URL",

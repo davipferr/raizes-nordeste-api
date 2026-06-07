@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 from src.dominio.enums import PerfilUsuario
 
 class RequisicaoLogin(BaseModel):
@@ -33,8 +33,7 @@ class RespostaUsuarioPublico(BaseModel):
     perfil: PerfilUsuario
     consentimento_lgpd: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RespostaLogin(BaseModel):
     access_token: str

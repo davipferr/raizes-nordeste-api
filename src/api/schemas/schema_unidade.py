@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 class RequisicaoCriarUnidade(BaseModel):
     nome: str
@@ -31,5 +31,4 @@ class RespostaUnidade(BaseModel):
     ativo: bool
     criado_em: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

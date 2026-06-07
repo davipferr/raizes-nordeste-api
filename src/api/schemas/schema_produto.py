@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 class RequisicaoCriarProduto(BaseModel):
     nome: str
@@ -31,8 +31,7 @@ class RespostaProduto(BaseModel):
     ativo: bool
     criado_em: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RespostaProdutoCardapio(BaseModel):
     id: int
@@ -41,5 +40,4 @@ class RespostaProdutoCardapio(BaseModel):
     preco: Decimal
     categoria: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

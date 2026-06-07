@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 from src.dominio.enums import TipoTransacaoFidelidade
 
 class RespostaSaldoFidelidade(BaseModel):
@@ -29,5 +29,4 @@ class RespostaTransacaoFidelidade(BaseModel):
     descricao: str
     criado_em: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
