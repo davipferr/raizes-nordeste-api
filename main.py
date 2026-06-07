@@ -5,7 +5,7 @@ from src.api.tratadores_erro.tratadores import registrar_handlers
 from src.api.middleware.log_requisicoes import middleware_log
 from src.api.routers import (
     autenticacao, usuarios, unidades, produtos,
-    cardapio, estoque, pedidos, pagamentos, fidelidade
+    cardapio, estoque, pedidos, pagamentos, fidelidade, logs
 )
 
 app: FastAPI = criar_app()
@@ -22,6 +22,7 @@ app.include_router(estoque.roteador)
 app.include_router(pedidos.roteador)
 app.include_router(pagamentos.roteador)
 app.include_router(fidelidade.roteador)
+app.include_router(logs.roteador)
 
 @app.get("/", tags=["Saúde"])
 def verificar_saude():

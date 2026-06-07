@@ -61,7 +61,7 @@ async def tratar_credenciais_invalidas(request: Request, exc: CredenciaisInvalid
 
 async def tratar_erro_negocio(request: Request, exc: ErroNegocio) -> JSONResponse:
     codigo_http = status.HTTP_409_CONFLICT
-    if "NAO_ENCONTRADO" in exc.codigo:
+    if "NAO_ENCONTRADO" in exc.codigo or "NAO_ENCONTRADA" in exc.codigo or "FORA_DO_CARDAPIO" in exc.codigo:
         codigo_http = status.HTTP_404_NOT_FOUND
     elif "LGPD" in exc.codigo or "PERMISSAO" in exc.codigo:
         codigo_http = status.HTTP_403_FORBIDDEN

@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Raízes do Nordeste API - Plano de Testes",
-    "description": "Coleção completa com os 14 cenários de teste (T01-T14) para a API da rede Raízes do Nordeste. Execute na ordem: Auth → Produtos → Pedidos → Pagamentos → Fidelidade.",
+    "description": "Coleção completa com os 17 cenários de teste (T01-T17) para a API da rede Raízes do Nordeste. Execute na ordem: Auth → Cardápio e Produtos → Estoque → Pedidos → Pagamentos → Fidelidade → Logs e Auditoria.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -177,6 +177,26 @@
             "url": "{{base_url}}/pedidos",
             "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"itens\": [{ \"produto_id\": 1, \"quantidade\": 1 }],\n  \"forma_pagamento\": \"MOCK\"\n}" }
           }
+        },
+        {
+          "name": "T15 - Quantidade negativa no pedido (422)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 422', () => pm.response.to.have.status(422));", "pm.test('Erro VALIDACAO_INVALIDA com campo quantidade', () => { var j = pm.response.json(); pm.expect(j.erro).to.eql('VALIDACAO_INVALIDA'); pm.expect(j.detalhes.some(d => d.campo.includes('quantidade'))).to.be.true; });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pedidos",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"canal_pedido\": \"APP\",\n  \"itens\": [\n    { \"produto_id\": 1, \"quantidade\": -1 }\n  ],\n  \"forma_pagamento\": \"MOCK\"\n}" }
+          }
+        },
+        {
+          "name": "T16 - Pedido com unidade inexistente (404)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 404', () => pm.response.to.have.status(404));", "pm.test('Erro UNIDADE_NAO_ENCONTRADA', () => { pm.expect(pm.response.json().erro).to.eql('UNIDADE_NAO_ENCONTRADA'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pedidos",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 9999,\n  \"canal_pedido\": \"APP\",\n  \"itens\": [\n    { \"produto_id\": 1, \"quantidade\": 1 }\n  ],\n  \"forma_pagamento\": \"MOCK\"\n}" }
+          }
         }
       ]
     },
@@ -253,6 +273,20 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token_sem_lgpd}}" }],
             "url": "{{base_url}}/fidelidade/saldo"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logs e Auditoria",
+      "item": [
+        {
+          "name": "T17 - Auditoria: log de PEDIDO_CRIADO gerado (200)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Existe registro PEDIDO_CRIADO na auditoria', () => { var j = pm.response.json(); pm.expect(j).to.be.an('array'); pm.expect(j.length).to.be.above(0); pm.expect(j[0].acao).to.eql('PEDIDO_CRIADO'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{base_url}}/logs/auditoria?acao=PEDIDO_CRIADO&limite=1", "host": ["{{base_url}}"], "path": ["logs", "auditoria"], "query": [{ "key": "acao", "value": "PEDIDO_CRIADO" }, { "key": "limite", "value": "1" }] }
           }
         }
       ]

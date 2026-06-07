@@ -339,7 +339,7 @@ O arquivo `colecao_postman/raizes_nordeste.json` contém os 14 cenários de test
 3. Selecione o arquivo `colecao_postman/raizes_nordeste.json` na pasta do projeto e confirme a importação (faça login se necessário).
 4. A coleção **"Raízes do Nordeste API - Plano de Testes"** aparecerá na barra lateral esquerda.
 5. Certifique-se de que a API está rodando antes de executar os testes (`uvicorn main:app --reload`).
-6. Execute as pastas **na ordem**: Auth → Cardápio e Produtos → Estoque (referência) → Pedidos → Pagamentos → Fidelidade.
+6. Execute as pastas **na ordem**: Auth → Cardápio e Produtos → Estoque → Pedidos → Pagamentos → Fidelidade -> Logs e Auditoria.
    - Para executar uma pasta: clique nos **três pontos (...)** ao lado do nome da pasta → **Run** → **Start run**.
 
 > **Importante:** Execute a pasta **Auth** primeiro (T01 e T01b) — ela preenche automaticamente os tokens de autenticação usados pelas demais requisições.
@@ -362,6 +362,9 @@ O arquivo `colecao_postman/raizes_nordeste.json` contém os 14 cenários de test
 | T12 | Pagamento mock recusado           | Negativo  | 200 + RECUSADO     |
 | T13 | Consultar saldo de fidelidade     | Positivo  | 200                |
 | T14 | Fidelidade sem consentimento LGPD | Negativo  | 403                |
+| T15 | Quantidade negativa no pedido     | Negativo  | 422                |
+| T16 | Pedido com unidade inexistente    | Negativo  | 404                |
+| T17 | Log de auditoria após pedido      | Positivo  | 200                |
 
 ---
 
