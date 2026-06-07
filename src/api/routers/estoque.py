@@ -15,6 +15,11 @@ from src.infraestrutura.banco.modelos import ModeloUsuario
 roteador = APIRouter(prefix="/estoque", tags=["Estoque"])
 
 @roteador.get("/{unidade_id}", response_model=list[RespostaEstoque], summary="Consultar estoque por unidade",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** `ADMIN`, `GERENTE`, `ATENDENTE`.\n\n"
+                  "Retorna o estoque atual de todos os produtos da unidade, incluindo indicador de alerta de estoque mínimo."
+              ),
               responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **ERRO_INTERNO})
 def consultar(
     unidade_id: int,
@@ -27,6 +32,12 @@ def consultar(
 
 @roteador.post("/entrada", response_model=RespostaEstoque, status_code=201,
                summary="Registrar entrada de estoque",
+               description=(
+                   "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                   "**Perfis permitidos:** `ADMIN`, `GERENTE`.\n\n"
+                   "Registra a entrada de uma quantidade de produto no estoque de uma unidade. "
+                   "A movimentação fica registrada em auditoria com o usuário responsável e o motivo informado."
+               ),
                responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **UNIDADE_OU_PRODUTO_NAO_ENCONTRADO, **VALIDACAO, **ERRO_INTERNO})
 def entrada(
     dados: RequisicaoMovimentacaoEstoque,
@@ -48,6 +59,12 @@ def entrada(
 
 @roteador.post("/saida", response_model=RespostaEstoque, status_code=201,
                summary="Registrar saída manual de estoque",
+               description=(
+                   "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                   "**Perfis permitidos:** `ADMIN`, `GERENTE`.\n\n"
+                   "Registra a saída manual de uma quantidade de produto do estoque de uma unidade. "
+                   "Retorna erro caso o estoque seja insuficiente para a quantidade solicitada."
+               ),
                responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **ESTOQUE_INSUFICIENTE, **VALIDACAO, **ERRO_INTERNO})
 def saida(
     dados: RequisicaoMovimentacaoEstoque,

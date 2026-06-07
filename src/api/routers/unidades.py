@@ -17,6 +17,10 @@ from src.infraestrutura.banco.modelos import ModeloUsuario
 roteador = APIRouter(prefix="/unidades", tags=["Unidades"])
 
 @roteador.get("", response_model=RespostaPaginada[RespostaUnidade], summary="Listar unidades da rede",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** Todos (ADMIN, GERENTE, COZINHA, ATENDENTE, CLIENTE)."
+              ),
               responses={**NAO_AUTENTICADO, **ERRO_INTERNO})
 def listar(
     pagina: int = Query(1, ge=1),
@@ -28,6 +32,10 @@ def listar(
     return RespostaPaginada(itens=itens, total=total, pagina=pagina, limite=limite, paginas=math.ceil(total / limite) or 1)
 
 @roteador.get("/{unidade_id}", response_model=RespostaUnidade, summary="Obter unidade por ID",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** Todos (ADMIN, GERENTE, COZINHA, ATENDENTE, CLIENTE)."
+              ),
               responses={**NAO_AUTENTICADO, **UNIDADE_NAO_ENCONTRADA, **ERRO_INTERNO})
 def obter(
     unidade_id: int,
@@ -37,6 +45,10 @@ def obter(
     return obter_unidade(sessao, unidade_id)
 
 @roteador.post("", response_model=RespostaUnidade, status_code=201, summary="Criar nova unidade",
+               description=(
+                   "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                   "**Perfis permitidos:** `ADMIN`."
+               ),
                responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **VALIDACAO, **ERRO_INTERNO})
 def criar(
     dados: RequisicaoCriarUnidade,
@@ -46,6 +58,10 @@ def criar(
     return criar_unidade(sessao, dados.nome, dados.endereco, dados.cidade, dados.estado)
 
 @roteador.put("/{unidade_id}", response_model=RespostaUnidade, summary="Atualizar unidade",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** `ADMIN`, `GERENTE`."
+              ),
               responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **UNIDADE_NAO_ENCONTRADA, **VALIDACAO, **ERRO_INTERNO})
 def atualizar(
     unidade_id: int,

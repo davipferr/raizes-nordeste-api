@@ -22,6 +22,12 @@ _PERFIS_PAGAMENTO = (
     "/processar/{pedido_id}",
     response_model=RespostaPagamento,
     summary="Processar pagamento mock para um pedido",
+    description=(
+        "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+        "**Perfis permitidos:** `ADMIN`, `GERENTE`, `ATENDENTE`, `CLIENTE`.\n\n"
+        "Simulação de processamento de pagamento (mock). O campo `forcar_recusa` permite testar cenários de pagamento recusado. "
+        "O pedido deve estar no status `AGUARDANDO_PAGAMENTO`."
+    ),
     responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **PEDIDO_NAO_ENCONTRADO, **PEDIDO_NAO_AGUARDANDO_PAGAMENTO, **VALIDACAO, **ERRO_INTERNO},
 )
 def processar(

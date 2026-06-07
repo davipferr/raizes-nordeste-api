@@ -12,11 +12,21 @@ from src.infraestrutura.banco.modelos import ModeloUsuario
 roteador = APIRouter(prefix="/usuarios", tags=["Usuários"])
 
 @roteador.get("/me", response_model=RespostaUsuario, summary="Perfil do usuário atual",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** Todos (ADMIN, GERENTE, COZINHA, ATENDENTE, CLIENTE).\n\n"
+                  "Retorna o perfil completo do usuário autenticado."
+              ),
               responses={**NAO_AUTENTICADO, **ERRO_INTERNO})
 def obter_perfil(usuario: ModeloUsuario = Depends(obter_usuario_atual)):
     return usuario
 
 @roteador.put("/me", response_model=RespostaUsuario, summary="Atualizar perfil do usuário atual",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** Todos (ADMIN, GERENTE, COZINHA, ATENDENTE, CLIENTE).\n\n"
+                  "Permite atualizar nome e consentimento LGPD do próprio usuário autenticado."
+              ),
               responses={**NAO_AUTENTICADO, **VALIDACAO, **ERRO_INTERNO})
 def atualizar_perfil(
     dados: RequisicaoAtualizarUsuario,
@@ -34,6 +44,12 @@ def atualizar_perfil(
     return usuario
 
 @roteador.get("/{usuario_id}", response_model=RespostaUsuario, summary="Buscar usuário por ID",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** Todos — com restrição de escopo:\n\n"
+                  "- `ADMIN`, `GERENTE`: podem consultar qualquer usuário.\n"
+                  "- `COZINHA`, `ATENDENTE`, `CLIENTE`: podem consultar apenas o próprio perfil (`usuario_id` igual ao do token)."
+              ),
               responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **USUARIO_NAO_ENCONTRADO, **ERRO_INTERNO})
 def obter_usuario(
     usuario_id: int,

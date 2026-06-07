@@ -31,6 +31,12 @@ _PERFIS_STATUS = (
 )
 
 @roteador.post("", response_model=RespostaPedido, status_code=201, summary="Criar pedido",
+               description=(
+                   "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                   "**Perfis permitidos:** `ADMIN`, `GERENTE`, `ATENDENTE`, `CLIENTE`.\n\n"
+                   "Cria um novo pedido para a unidade informada. Suporta os canais: `APP`, `TOTEM`, `BALCAO`, `PICKUP`, `WEB`. "
+                   "O estoque é baixado automaticamente ao confirmar o pedido."
+               ),
                responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **RECURSOS_PEDIDO_NAO_ENCONTRADO, **ESTOQUE_INSUFICIENTE, **VALIDACAO, **ERRO_INTERNO})
 def criar(
     dados: RequisicaoCriarPedido,
@@ -51,6 +57,12 @@ def criar(
     return obter_pedido_com_itens(sessao, pedido.id)
 
 @roteador.get("", response_model=RespostaPaginada[RespostaPedidoResumo], summary="Listar pedidos",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** Todos — com restrição de escopo:\n\n"
+                  "- `ADMIN`, `GERENTE`, `COZINHA`, `ATENDENTE`: visualizam todos os pedidos (com filtros opcionais).\n"
+                  "- `CLIENTE`: visualiza apenas os próprios pedidos (filtro aplicado automaticamente pelo servidor)."
+              ),
               responses={**NAO_AUTENTICADO, **ERRO_INTERNO})
 def listar(
     pagina: int = Query(1, ge=1),
@@ -74,6 +86,12 @@ def listar(
     )
 
 @roteador.get("/{pedido_id}", response_model=RespostaPedido, summary="Obter pedido com itens",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** Todos — com restrição de escopo:\n\n"
+                  "- `ADMIN`, `GERENTE`, `COZINHA`, `ATENDENTE`: podem consultar qualquer pedido.\n"
+                  "- `CLIENTE`: pode consultar apenas seus próprios pedidos; retorna 403 para pedidos de outros clientes."
+              ),
               responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **PEDIDO_NAO_ENCONTRADO, **ERRO_INTERNO})
 def obter(
     pedido_id: int,
@@ -91,6 +109,12 @@ def obter(
     return dados
 
 @roteador.patch("/{pedido_id}/status", response_model=RespostaPedido, summary="Atualizar status do pedido",
+                description=(
+                    "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                    "**Perfis permitidos:** `ADMIN`, `GERENTE`, `COZINHA`, `ATENDENTE`.\n\n"
+                    "Avança o status do pedido seguindo a máquina de estados definida. "
+                    "Transições inválidas retornam erro `TRANSICAO_STATUS_INVALIDA`."
+                ),
                 responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **PEDIDO_NAO_ENCONTRADO, **TRANSICAO_STATUS_INVALIDA, **VALIDACAO, **ERRO_INTERNO})
 def atualizar_status(
     pedido_id: int,

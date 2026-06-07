@@ -16,6 +16,11 @@ from src.infraestrutura.banco.modelos import ModeloUsuario
 roteador = APIRouter(prefix="/cardapio", tags=["Cardápio"])
 
 @roteador.get("/{unidade_id}", response_model=list[RespostaProdutoCardapio], summary="Cardápio da unidade",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** Todos (ADMIN, GERENTE, COZINHA, ATENDENTE, CLIENTE).\n\n"
+                  "Retorna todos os produtos ativos vinculados ao cardápio da unidade informada."
+              ),
               responses={**NAO_AUTENTICADO, **UNIDADE_NAO_ENCONTRADA, **ERRO_INTERNO})
 def listar_cardapio(
     unidade_id: int,
@@ -25,6 +30,11 @@ def listar_cardapio(
     return listar_cardapio_unidade(sessao, unidade_id)
 
 @roteador.post("/{unidade_id}/produtos/{produto_id}", status_code=204, summary="Adicionar produto ao cardápio",
+               description=(
+                   "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                   "**Perfis permitidos:** `ADMIN`, `GERENTE`.\n\n"
+                   "Vincula um produto existente ao cardápio de uma unidade específica."
+               ),
                responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **UNIDADE_OU_PRODUTO_NAO_ENCONTRADO, **ERRO_INTERNO})
 def adicionar(
     unidade_id: int,
@@ -35,6 +45,11 @@ def adicionar(
     adicionar_produto_cardapio(sessao, unidade_id, produto_id)
 
 @roteador.delete("/{unidade_id}/produtos/{produto_id}", status_code=204, summary="Remover produto do cardápio",
+                 description=(
+                     "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                     "**Perfis permitidos:** `ADMIN`, `GERENTE`.\n\n"
+                     "Remove o vínculo do produto com o cardápio da unidade. O produto em si não é excluído."
+                 ),
                  responses={**NAO_AUTENTICADO, **PERMISSAO_NEGADA, **ERRO_INTERNO})
 def remover(
     unidade_id: int,

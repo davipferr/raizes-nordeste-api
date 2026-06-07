@@ -16,6 +16,11 @@ from src.infraestrutura.banco.modelos import ModeloUsuario
 roteador = APIRouter(prefix="/auth", tags=["Autenticação"])
 
 @roteador.post("/login", response_model=RespostaLogin, summary="Autenticar usuário",
+               description=(
+                   "**Autenticação:** Pública — não requer token JWT.\n\n"
+                   "Retorna um token JWT que deve ser enviado nas requisições protegidas "
+                   "no header `Authorization: Bearer <token>`."
+               ),
                responses={**CREDENCIAIS_INVALIDAS, **VALIDACAO, **ERRO_INTERNO})
 def login(requisicao: RequisicaoLogin, request: Request, sessao: Session = Depends(obter_db)):
     resultado = autenticar_usuario(sessao, requisicao.email, requisicao.senha)
@@ -29,6 +34,12 @@ def login(requisicao: RequisicaoLogin, request: Request, sessao: Session = Depen
 
 @roteador.post("/registrar", response_model=RespostaUsuarioPublico, status_code=201,
                summary="Registrar novo usuário",
+               description=(
+                   "**Autenticação:** Pública — não requer token JWT.\n\n"
+                   "Cria uma nova conta de usuário. O perfil padrão é `CLIENTE`; "
+                   "perfis administrativos (`ADMIN`, `GERENTE`, `COZINHA`, `ATENDENTE`) "
+                   "podem ser informados no campo `perfil`."
+               ),
                responses={**EMAIL_JA_CADASTRADO, **VALIDACAO, **ERRO_INTERNO})
 def registrar(requisicao: RequisicaoRegistro, sessao: Session = Depends(obter_db)):
     usuario = registrar_usuario(
@@ -42,6 +53,11 @@ def registrar(requisicao: RequisicaoRegistro, sessao: Session = Depends(obter_db
     return usuario
 
 @roteador.get("/me", response_model=RespostaUsuarioPublico, summary="Dados do usuário autenticado",
+              description=(
+                  "**Autenticação:** JWT obrigatório (`Authorization: Bearer <token>`).\n\n"
+                  "**Perfis permitidos:** Todos (ADMIN, GERENTE, COZINHA, ATENDENTE, CLIENTE).\n\n"
+                  "Retorna os dados públicos do usuário dono do token."
+              ),
               responses={**NAO_AUTENTICADO, **ERRO_INTERNO})
 def perfil_atual(usuario: ModeloUsuario = Depends(obter_usuario_atual)):
     return usuario
