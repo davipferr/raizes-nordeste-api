@@ -330,7 +330,7 @@ Com a API rodando, acesse:
 
 ## Coleção de testes (Postman)
 
-O arquivo `colecao_postman/raizes_nordeste.json` contém os 14 cenários de teste organizados em pastas.
+O arquivo `colecao_postman/raizes_nordeste.json` contém os 18 cenários de teste organizados em pastas.
 
 ### Como importar e usar
 
@@ -365,6 +365,7 @@ O arquivo `colecao_postman/raizes_nordeste.json` contém os 14 cenários de test
 | T15 | Quantidade negativa no pedido     | Negativo  | 422                |
 | T16 | Pedido com unidade inexistente    | Negativo  | 404                |
 | T17 | Log de auditoria após pedido      | Positivo  | 200                |
+| T18 | Fluxo A: ciclo de status completo | Positivo  | 200                |
 
 ---
 

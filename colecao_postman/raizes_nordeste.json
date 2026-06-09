@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Raízes do Nordeste API - Plano de Testes",
-    "description": "Coleção completa com os 17 cenários de teste (T01-T17) para a API da rede Raízes do Nordeste. Execute na ordem: Auth → Cardápio e Produtos → Estoque → Pedidos → Pagamentos → Fidelidade → Logs e Auditoria.",
+    "description": "Coleção completa com os 18 cenários de teste (T01-T18) para a API da rede Raízes do Nordeste. Execute na ordem: Auth → Cardápio e Produtos → Estoque → Pedidos → Pagamentos → Fidelidade → Logs e Auditoria.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -11,7 +11,8 @@
     { "key": "pedido_id", "value": "" },
     { "key": "pedido_id_recusa", "value": "" },
     { "key": "token_sem_lgpd", "value": "" },
-    { "key": "email_sem_lgpd", "value": "" }
+    { "key": "email_sem_lgpd", "value": "" },
+    { "key": "pedido_id_fluxo_a", "value": "" }
   ],
   "item": [
     {
@@ -196,6 +197,56 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
             "url": "{{base_url}}/pedidos",
             "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 9999,\n  \"canal_pedido\": \"APP\",\n  \"itens\": [\n    { \"produto_id\": 1, \"quantidade\": 1 }\n  ],\n  \"forma_pagamento\": \"MOCK\"\n}" }
+          }
+        },
+        {
+          "name": "T18a - Criar pedido para Fluxo A completo",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "pm.test('Salva pedido_id_fluxo_a e status AGUARDANDO_PAGAMENTO', () => { var j = pm.response.json(); pm.collectionVariables.set('pedido_id_fluxo_a', j.id); pm.expect(j.status).to.eql('AGUARDANDO_PAGAMENTO'); pm.expect(j.canal_pedido).to.eql('BALCAO'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pedidos",
+            "body": { "mode": "raw", "raw": "{\n  \"unidade_id\": 1,\n  \"canal_pedido\": \"BALCAO\",\n  \"itens\": [\n    { \"produto_id\": 2, \"quantidade\": 1 }\n  ],\n  \"forma_pagamento\": \"MOCK\"\n}" }
+          }
+        },
+        {
+          "name": "T18b - [Pré-condição] Aprovar pagamento do pedido Fluxo A",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200 e aprovado', () => { var j = pm.response.json(); pm.expect(j.aprovado).to.be.true; pm.expect(j.status).to.eql('APROVADO'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_cliente}}" }],
+            "url": "{{base_url}}/pagamentos/processar/{{pedido_id_fluxo_a}}",
+            "body": { "mode": "raw", "raw": "{\n  \"forcar_recusa\": false\n}" }
+          }
+        },
+        {
+          "name": "T18c - Fluxo A: Cozinha → EM_PREPARO (200)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Status EM_PREPARO', () => { pm.expect(pm.response.json().status).to.eql('EM_PREPARO'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/pedidos/{{pedido_id_fluxo_a}}/status",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"EM_PREPARO\"\n}" }
+          }
+        },
+        {
+          "name": "T18d - Fluxo A: Cozinha → PRONTO (200)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Status PRONTO', () => { pm.expect(pm.response.json().status).to.eql('PRONTO'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/pedidos/{{pedido_id_fluxo_a}}/status",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"PRONTO\"\n}" }
+          }
+        },
+        {
+          "name": "T18e - Fluxo A: Atendente → ENTREGUE (200)",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));", "pm.test('Status ENTREGUE - Fluxo A completo', () => { pm.expect(pm.response.json().status).to.eql('ENTREGUE'); });"], "type": "text/javascript" } }],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/pedidos/{{pedido_id_fluxo_a}}/status",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"ENTREGUE\"\n}" }
           }
         }
       ]

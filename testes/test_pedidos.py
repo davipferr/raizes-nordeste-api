@@ -84,3 +84,44 @@ def test_t16_pedido_unidade_inexistente(cliente_http, ids, token_cliente):
     assert resposta.status_code == 404
     corpo_resp = resposta.json()
     assert corpo_resp.get("erro") == "UNIDADE_NAO_ENCONTRADA"
+
+def test_t18_fluxo_a_atualizacao_status(cliente_http, ids, token_cliente, token_cozinha, token_atendente):
+    pedido = cliente_http.post(
+        "/pedidos",
+        json=_corpo_pedido(ids, canal="BALCAO", produto_id=ids["produto_2"]),
+        headers=cabecalho(token_cliente),
+    )
+    assert pedido.status_code == 201
+    pedido_id = pedido.json()["id"]
+
+    pagamento = cliente_http.post(
+        f"/pagamentos/processar/{pedido_id}",
+        json={"forcar_recusa": False},
+        headers=cabecalho(token_cliente),
+    )
+    assert pagamento.status_code == 200
+    assert pagamento.json()["aprovado"] is True
+
+    resposta = cliente_http.patch(
+        f"/pedidos/{pedido_id}/status",
+        json={"status": "EM_PREPARO"},
+        headers=cabecalho(token_cozinha),
+    )
+    assert resposta.status_code == 200
+    assert resposta.json()["status"] == "EM_PREPARO"
+
+    resposta = cliente_http.patch(
+        f"/pedidos/{pedido_id}/status",
+        json={"status": "PRONTO"},
+        headers=cabecalho(token_cozinha),
+    )
+    assert resposta.status_code == 200
+    assert resposta.json()["status"] == "PRONTO"
+
+    resposta = cliente_http.patch(
+        f"/pedidos/{pedido_id}/status",
+        json={"status": "ENTREGUE"},
+        headers=cabecalho(token_atendente),
+    )
+    assert resposta.status_code == 200
+    assert resposta.json()["status"] == "ENTREGUE"
