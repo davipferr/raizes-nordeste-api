@@ -307,7 +307,7 @@ uvicorn main:app --reload
 
 A API estará disponível em: `http://localhost:8000`
 
-Para confirmar que está rodando, acesse `http://localhost:8000/` e verifique:
+Para confirmar que está rodando, acesse `http://localhost:8000/saude` e verifique:
 
 ```json
 {
