@@ -156,9 +156,25 @@ pip install -r requirements.txt
 
 ### 3.1 Copiar o arquivo de exemplo
 
+**Linux / macOS:**
+
 ```bash
 cp .env.example .env
 ```
+
+**Windows (PowerShell):**
+
+```powershell
+Copy-Item .env.example .env
+```
+
+**Windows (Prompt de Comando / CMD):**
+
+```cmd
+copy .env.example .env
+```
+
+> Caso prefira, você também pode duplicar o arquivo `.env.example` manualmente pelo explorador de arquivos e renomear a cópia para `.env`.
 
 ### 3.2 Editar o arquivo `.env`
 
@@ -266,9 +282,9 @@ Saída esperada:
 
 ```bash
 Banco populado com sucesso!
-Usuários: 6
-Unidades: 2
-Produtos: 6
+Usuários criados: 6
+Unidades criadas: 2
+Produtos criados: 6
 
 Credenciais para teste:
 admin@raizesnordeste.com.br / Admin@123
@@ -339,10 +355,9 @@ O arquivo `colecao_postman/raizes_nordeste.json` contém os 18 cenários de test
 3. Selecione o arquivo `colecao_postman/raizes_nordeste.json` na pasta do projeto e confirme a importação (faça login se necessário).
 4. A coleção **"Raízes do Nordeste API - Plano de Testes"** aparecerá na barra lateral esquerda.
 5. Certifique-se de que a API está rodando antes de executar os testes (`uvicorn main:app --reload`).
-6. Execute as pastas **na ordem**: Auth → Cardápio e Produtos → Estoque → Pedidos → Pagamentos → Fidelidade -> Logs e Auditoria.
-   - Para executar uma pasta: clique nos **três pontos (...)** ao lado do nome da pasta → **Run** → **Start run**.
+6. Clique nos **três pontos (...)** ao lado do nome da coleção → **Run** → **Start run**.
 
-> **Importante:** Execute a pasta **Auth** primeiro (T01 e T01b) — ela preenche automaticamente os tokens de autenticação usados pelas demais requisições.
+> **Importante:** Execute sempre a **coleção inteira** de uma só vez, não pasta por pasta. Os tokens de autenticação são gerenciados automaticamente pela coleção.
 
 ### Cenários cobertos
 
@@ -375,11 +390,7 @@ Os testes usam um banco PostgreSQL separado (`raizes_nordeste_teste`) e testam o
 
 ### Pré-requisito
 
-Certifique-se de que `DATABASE_TEST_URL` está configurado no `.env` e o banco de testes existe:
-
-```bash
-createdb raizes_nordeste_teste
-```
+Certifique-se de que `DATABASE_TEST_URL` está configurado no `.env` e o banco de testes existe.
 
 ### Executar todos os testes
 
